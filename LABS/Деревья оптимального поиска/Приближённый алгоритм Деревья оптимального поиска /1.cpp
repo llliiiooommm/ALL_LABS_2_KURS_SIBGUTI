@@ -28,14 +28,12 @@ int *mas, *W;
 int AW[N + 1][N + 1];
 int AP[N + 1][N + 1], AR[N + 1][N + 1];
 
-/*Матрица весов*/
 void AW_count() {
 	for (int i = 0; i <= N; i++)
 		for (int j = i + 1; j <= N; j++)
 			AW[i][j] = AW[i][j - 1] + W[j - 1];
 }
 
-/*Взвешенная матрица весов AP и итоговая матрица AR*/
 void AP_AR_count() {
 	int min, m, x, j;
 	
@@ -63,7 +61,6 @@ void AP_AR_count() {
 	}
 }
 
-/*Функция добавления в дерево - обычное BST*/
 void add(vertex *&p, int x, int w) {
 	if (p == NULL)
 	{
@@ -83,7 +80,6 @@ void add(vertex *&p, int x, int w) {
 		}
 }
 
-/*Создание дерева по точному алгоритму (динамическое программирование)*/
 void create_tree(int L, int R) {
 	if (L >= R) return;
 	int k = AR[L][R];
@@ -92,7 +88,6 @@ void create_tree(int L, int R) {
 	create_tree(k, R);
 }
 
-/*Приближённый алгоритм A2 — рекурсивное разделение по медиане весов*/
 void A2(int L, int R) {
 	if (L > R) return;
 	int wes = 0;
@@ -108,19 +103,34 @@ void A2(int L, int R) {
 	A2(i + 1, R);
 }
 
-/*Сортировка пузырьком по убыванию весов (для алгоритма A1)*/
-void BubbleSort() {
-	for (int i = 0; i < N - 1; i++) {
-		for (int j = N - 1; j > i; j--) {
-			if (W[j] > W[j - 1]) {
-				swap(W[j], W[j - 1]);
-				swap(mas[j], mas[j - 1]);
-			}
+void QuickSort(int left, int right) {
+	if (left >= right) return;
+
+	int i = left, j = right;
+	int pivotW = W[(left + right) / 2];
+
+	while (i <= j) {
+		while (W[i] > pivotW) i++;
+		while (W[j] < pivotW) j--;
+
+		if (i <= j) {
+			int tempW = W[i];
+			W[i] = W[j];
+			W[j] = tempW;
+
+			int tempMas = mas[i];
+			mas[i] = mas[j];
+			mas[j] = tempMas;
+
+			i++;
+			j--;
 		}
 	}
+
+	if (left < j) QuickSort(left, j);
+	if (i < right) QuickSort(i, right);
 }
 
-/*Обход дерева (симметричный)*/
 void LRprint(vertex *&x) {
 	if (x == NULL) return;
 	LRprint(x->left);
@@ -128,7 +138,6 @@ void LRprint(vertex *&x) {
 	LRprint(x->right);
 }
 
-/*Вычисление размера дерева*/
 int size(vertex *p)
 {
 	if (p == NULL)
@@ -136,7 +145,6 @@ int size(vertex *p)
 	return 1 + size(p->left) + size(p->right);
 }
 
-/*Сумма всех ключей в дереве*/
 long summ(vertex *p)
 {
 	if (p == NULL)
@@ -144,7 +152,6 @@ long summ(vertex *p)
 	return p->data + summ(p->left) + summ(p->right);
 }
 
-/*Расчёт высот узлов*/
 void seth(vertex *p)
 {
 	if (p) {
@@ -159,7 +166,6 @@ void seth(vertex *p)
 	}
 }
 
-/*Вычисление средневзвешенной высоты*/
 void midh(vertex *p)
 {
 	if (p) {
@@ -217,18 +223,15 @@ int main() {
 	}
 	cout << endl;
 
-	/*Построение точного дерева (DP)*/
 	create_tree(0, N);
 	if (root1) root1->h = 1;
 	seth(root1);
 
-	/*Построение приближённого дерева A2*/
 	A2(0, N - 1);
 	if (root3) root3->h = 1;
 	seth(root3);
 
-	/*Построение приближённого дерева A1 — сортировка и вставка*/
-	BubbleSort();
+	QuickSort(0, N - 1);
 	for (int i = 0; i < N; i++) {
 		add(root2, mas[i], W[i]);
 	}
